@@ -21,6 +21,7 @@
   @keyframes navn { from { opacity: 0; filter: blur(5px); } to { opacity: 1; filter: none; } }
   @keyframes fram { from { opacity: 0; } to { opacity: 1; } }
   @keyframes stig { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes puls { 0%, 100% { opacity: 0; } 50% { opacity: .35; } }
   @keyframes glans { from { background-position: 150% 0; } to { background-position: -50% 0; } }
 
   .navnebilde { display: block; width: 360px; max-width: 100%; height: auto; margin: 0 auto; animation: navn 1.6s ease .2s both; }
@@ -33,7 +34,6 @@
     transition: opacity .5s ease;
   }
   .lastet .strek::after { opacity: 0; }
-  .vent { margin: 18px 0 0; font-style: italic; font-size: 17px; color: #8C877C; animation: fram .8s ease 2.5s both; }
   .stig { animation: stig .6s cubic-bezier(.22, .61, .36, 1) calc(var(--i, 0) * 70ms) both; }
   .borte { opacity: 0; transform: translateY(-6px); transition: opacity .35s ease, transform .35s ease; }
 
@@ -87,9 +87,8 @@
   @media (prefers-reduced-motion: reduce) {
     .navnebilde { animation: fram .4s ease both; }
     .strek { animation: none; }
-    .strek::after { display: none; }
+    .strek::after { background: var(--gull); animation: puls 2.4s ease-in-out infinite; }
     .eyebrow { animation: fram .2s ease both; }
-    .vent { animation-duration: .2s; }
     .stig { animation: fram .2s ease both; }
     .borte { transform: none; }
     .send[disabled] { animation: none; }
@@ -97,11 +96,10 @@
 </style>
 </head>
 <body>
-<main id="app">
+<main id="app" aria-busy="true">
   <img class="navnebilde" src="navn.png" alt="Juliane &amp; Frithjof">
   <div class="strek"></div>
   <div class="eyebrow">Lørdag 21. august 2027</div>
-  <p class="vent" id="vent" role="status">Et øyeblikk …</p>
 </main>
 <script>
   const API = 'https://script.google.com/macros/s/AKfycbwFCmrK25EuqKGZnTOvWyNbvC3duvGWeHzAwrABDTuvI3DHljfd1SrdjpcKS7LTdRoCGw/exec';
@@ -260,17 +258,14 @@
   }
 
   const start = performance.now();
-  const vent = document.getElementById('vent');
   const kode = params.get('k') || '';
   const hent = () => fetch(API + '?k=' + encodeURIComponent(kode)).then(r => r.json());
   (kode ? hent().catch(() => new Promise(r => setTimeout(r, 1500)).then(hent)) : Promise.resolve({ ok: false }))
     .then(res => res.ok ? Object.assign(res.data, { valg: params.get('s') || '' }) : null)
     .catch(() => 'feil')
     .then(data => {
-      const synlig = parseFloat(getComputedStyle(vent).opacity) > 0;
-      if (synlig) vent.animate([{ opacity: getComputedStyle(vent).opacity }, { opacity: 0 }], { duration: 250, fill: 'forwards' });
-      const vente = Math.max(synlig ? 250 : 0, 650 - (performance.now() - start));
-      setTimeout(() => { document.body.classList.add('lastet'); vent.remove(); vis(data); }, vente);
+      const vente = Math.max(0, 650 - (performance.now() - start));
+      setTimeout(() => { document.body.classList.add('lastet'); app.removeAttribute('aria-busy'); vis(data); }, vente);
     });
 </script>
 </body>

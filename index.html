@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Juliane &amp; Frithjof – svar</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
@@ -13,26 +17,26 @@
   body { font-family: "Cormorant Garamond", Garamond, Georgia, serif; font-size: 19px; line-height: 1.6; }
   main { max-width: 520px; margin: 0 auto; padding: 56px 22px 64px; text-align: center; }
 
-  @keyframes opp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
   @keyframes navn { from { opacity: 0; filter: blur(5px); } to { opacity: 1; filter: none; } }
-  .inn { animation: opp .9s ease both; }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  @keyframes fram { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes stig { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes glans { from { background-position: 150% 0; } to { background-position: -50% 0; } }
 
   .navnebilde { display: block; width: 360px; max-width: 100%; height: auto; margin: 0 auto; animation: navn 1.6s ease .2s both; }
-  .strek { height: 1px; background: var(--linje); margin: 28px 0; }
-
-  @keyframes glans { from { background-position: 150% 0; } to { background-position: -50% 0; } }
-  @keyframes tone { from { opacity: 0; } to { opacity: 1; } }
-  .laster { transition: opacity .3s ease; }
-  .laster.borte { opacity: 0; }
-  .laster .strek {
-    background: linear-gradient(90deg, var(--linje) 0%, var(--linje) 35%, var(--gull) 50%, var(--linje) 65%, var(--linje) 100%);
+  .strek { position: relative; height: 1px; background: var(--linje); margin: 28px 0; animation: fram .6s ease .15s both; }
+  .strek::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, transparent 35%, var(--gull) 50%, transparent 65%, transparent 100%);
     background-size: 250% 100%;
     animation: glans 1.6s cubic-bezier(.45, 0, .55, 1) infinite;
+    transition: opacity .5s ease;
   }
-  .laster p { margin: 0; font-style: italic; font-size: 17px; color: #8C877C; animation: tone .8s ease .9s both; }
-  @media (prefers-reduced-motion: reduce) { .laster .strek { background: var(--linje); } }
-  .eyebrow { font-variant-numeric: lining-nums; font-size: 12px; font-weight: 500; letter-spacing: .4em; text-indent: .4em; text-transform: uppercase; color: var(--gull); }
+  .lastet .strek::after { opacity: 0; }
+  .vent { margin: 18px 0 0; font-style: italic; font-size: 17px; color: #8C877C; animation: fram .8s ease 2.5s both; }
+  .stig { animation: stig .6s cubic-bezier(.22, .61, .36, 1) calc(var(--i, 0) * 70ms) both; }
+  .borte { opacity: 0; transform: translateY(-6px); transition: opacity .35s ease, transform .35s ease; }
+
+  .eyebrow { animation: fram .8s ease .35s both; font-variant-numeric: lining-nums; font-size: 12px; font-weight: 500; letter-spacing: .4em; text-indent: .4em; text-transform: uppercase; color: var(--gull); }
   h1 { font-weight: 400; font-style: italic; font-size: 24px; margin: 0; }
   .ingress { color: var(--dempet); margin: 8px 0 0; }
 
@@ -79,11 +83,24 @@
   .takk h2 { font-weight: 400; font-style: italic; font-size: 26px; margin: 0; }
   .takk p { color: var(--dempet); }
   .liten { font-size: 15px; color: #8C877C; margin-top: 30px; }
+  @media (prefers-reduced-motion: reduce) {
+    .navnebilde { animation: fram .4s ease both; }
+    .strek { animation: none; }
+    .strek::after { display: none; }
+    .eyebrow { animation: fram .2s ease both; }
+    .vent { animation-duration: .2s; }
+    .stig { animation: fram .2s ease both; }
+    .borte { transform: none; }
+    .send[disabled] { animation: none; }
+  }
 </style>
 </head>
 <body>
 <main id="app">
   <img class="navnebilde" src="navn.png" alt="Juliane &amp; Frithjof">
+  <div class="strek"></div>
+  <div class="eyebrow">Lørdag 21. august 2027</div>
+  <p class="vent" id="vent" role="status">Et øyeblikk …</p>
 </main>
 <script>
   const API = 'https://script.google.com/macros/s/AKfycbwFCmrK25EuqKGZnTOvWyNbvC3duvGWeHzAwrABDTuvI3DHljfd1SrdjpcKS7LTdRoCGw/exec';
@@ -97,13 +114,17 @@
     return e;
   }
 
-  function topp() {
-    return [el('div', { class: 'strek' }), el('div', { class: 'eyebrow' }, 'Lørdag 21. august 2027')];
+  const roligBevegelse = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function stig(e, i) {
+    e.classList.add('stig');
+    e.style.setProperty('--i', i);
+    return e;
   }
 
   function vis(data) {
   if (!data) {
-    app.append(...topp(), el('p', { class: 'ingress inn' }, 'Vi fant dessverre ikke invitasjonen. Sjekk at du brukte lenken fra e-posten, eller ta kontakt med oss.'));
+    app.append(stig(el('p', { class: 'ingress' }, 'Vi fant dessverre ikke invitasjonen. Sjekk at du brukte lenken fra e-posten, eller ta kontakt med oss.'), 0));
   } else {
     const flere = data.personer.length > 1;
     const valgt = new Set(
@@ -204,44 +225,46 @@
         });
     };
 
-    const skjema = el('div', { class: 'inn', style: 'animation-delay:.6s' },
-      el('h1', {}, 'Kjære ' + data.hilsen + ','),
-      el('p', { class: 'ingress' }, data.tidligere
-        ? 'Vi har fått svaret ' + (flere ? 'deres' : 'ditt') + '. Du kan endre det her.'
-        : (flere ? 'Kryss av for hvem av dere som kommer.' : 'Gi oss beskjed om du kommer.') + (data.frist ? ' Svar gjerne innen ' + data.frist + '.' : '')),
-      el('div', { class: 'personer' }, ...knapper),
-      status,
-      ekstra,
-      felt('kommentar', 'Kommentar (valgfritt)', '', kommentar),
-      send,
-      feil
+    const skjema = el('div', {},
+      stig(el('h1', {}, 'Kjære ' + data.hilsen + ','), 0),
+      stig(el('p', { class: 'ingress' }, data.tidligere
+        ? 'Vi har fått svaret ' + (flere ? 'deres. Dere' : 'ditt. Du') + ' kan endre det her.'
+        : (flere ? 'Kryss av for hvem av dere som kommer.' : 'Gi oss beskjed om du kommer.') + (data.frist ? ' Svar gjerne innen ' + data.frist + '.' : '')), 1),
+      stig(el('div', { class: 'personer' }, ...knapper), 2),
+      stig(el('div', {}, status, ekstra), 3),
+      stig(felt('kommentar', 'Kommentar (valgfritt)', '', kommentar), 4),
+      stig(el('div', {}, send, feil), 5)
     );
     oppdaterStatus();
-    app.append(...topp(), skjema);
+    app.append(skjema);
 
     function visTakk(res) {
-      skjema.remove();
       const kommer = res.antall > 0;
-      app.append(el('div', { class: 'takk inn' },
-        el('h2', {}, kommer ? 'Tusen takk, vi gleder oss!' : 'Takk for at du ga beskjed'),
-        el('p', {}, kommer
+      const takk = el('div', { class: 'takk', role: 'status' },
+        stig(el('h2', {}, kommer ? 'Tusen takk, vi gleder oss!' : 'Takk for at ' + (flere ? 'dere' : 'du') + ' ga beskjed'), 0),
+        stig(el('p', {}, kommer
           ? 'Selve invitasjonen kommer i posten, med program og praktisk informasjon.'
-          : 'Vi kommer til å savne ' + (flere ? 'dere' : 'deg') + '.'),
-        el('p', { class: 'liten' }, 'Du kan endre svaret når som helst med lenken i e-posten.')
-      ));
+          : 'Vi kommer til å savne ' + (flere ? 'dere' : 'deg') + '.'), 1),
+        stig(el('p', { class: 'liten' }, (flere ? 'Dere' : 'Du') + ' kan endre svaret når som helst med lenken i e-posten.'), 2)
+      );
+      skjema.classList.add('borte');
+      if (scrollY > 0) scrollTo({ top: 0, behavior: roligBevegelse ? 'auto' : 'smooth' });
+      setTimeout(() => skjema.replaceWith(takk), roligBevegelse ? 150 : 380);
     }
   }
   }
 
-  const laster = el('div', { class: 'laster', role: 'status' }, el('div', { class: 'strek' }), el('p', {}, 'Et øyeblikk …'));
-  app.append(laster);
+  const start = performance.now();
+  const vent = document.getElementById('vent');
   const kode = params.get('k') || '';
   (kode ? fetch(API + '?k=' + encodeURIComponent(kode)).then(r => r.json()) : Promise.resolve({ ok: false }))
     .then(res => res.ok ? Object.assign(res.data, { valg: params.get('s') || '' }) : null)
     .catch(() => null)
     .then(data => {
-      laster.classList.add('borte');
-      setTimeout(() => { laster.remove(); vis(data); }, 300);
+      const synlig = parseFloat(getComputedStyle(vent).opacity) > 0;
+      if (synlig) vent.animate([{ opacity: getComputedStyle(vent).opacity }, { opacity: 0 }], { duration: 250, fill: 'forwards' });
+      const vente = Math.max(synlig ? 250 : 0, 650 - (performance.now() - start));
+      setTimeout(() => { document.body.classList.add('lastet'); vent.remove(); vis(data); }, vente);
     });
 </script>
 </body>

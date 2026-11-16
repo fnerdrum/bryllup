@@ -20,6 +20,18 @@
 
   .navnebilde { display: block; width: 360px; max-width: 100%; height: auto; margin: 0 auto; animation: navn 1.6s ease .2s both; }
   .strek { height: 1px; background: var(--linje); margin: 28px 0; }
+
+  @keyframes glans { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+  @keyframes tone { from { opacity: 0; } to { opacity: 1; } }
+  .laster { transition: opacity .3s ease; }
+  .laster.borte { opacity: 0; }
+  .laster .strek {
+    background: linear-gradient(90deg, var(--linje) 0%, var(--linje) 35%, var(--gull) 50%, var(--linje) 65%, var(--linje) 100%);
+    background-size: 250% 100%;
+    animation: glans 1.6s cubic-bezier(.45, 0, .55, 1) infinite;
+  }
+  .laster p { margin: 0; font-style: italic; font-size: 17px; color: #8C877C; animation: tone .8s ease .9s both; }
+  @media (prefers-reduced-motion: reduce) { .laster .strek { background: var(--linje); } }
   .eyebrow { font-variant-numeric: lining-nums; font-size: 12px; font-weight: 500; letter-spacing: .4em; text-indent: .4em; text-transform: uppercase; color: var(--gull); }
   h1 { font-weight: 400; font-style: italic; font-size: 24px; margin: 0; }
   .ingress { color: var(--dempet); margin: 8px 0 0; }
@@ -57,7 +69,12 @@
     margin-top: 26px; width: 100%; padding: 15px 20px; border: 0; background: var(--gull-mork); color: #fff;
     font: inherit; font-size: 19px; letter-spacing: .08em; cursor: pointer;
   }
-  .send[disabled] { opacity: .6; cursor: progress; }
+  .send[disabled] {
+    cursor: progress;
+    background: linear-gradient(90deg, var(--gull-mork) 0%, var(--gull-mork) 35%, var(--gull) 50%, var(--gull-mork) 65%, var(--gull-mork) 100%);
+    background-size: 250% 100%;
+    animation: glans 1.6s cubic-bezier(.45, 0, .55, 1) infinite;
+  }
   .feil { color: #8A3B2E; margin-top: 12px; }
   .takk h2 { font-weight: 400; font-style: italic; font-size: 26px; margin: 0; }
   .takk p { color: var(--dempet); }
@@ -161,6 +178,7 @@
         return;
       }
       send.disabled = true;
+      send.textContent = 'Sender …';
       fetch(API, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -181,6 +199,7 @@
         })
         .catch(err => {
           send.disabled = false;
+          send.textContent = data.tidligere ? 'Oppdater svar' : 'Send svar';
           feil.textContent = 'Noe gikk galt, prøv igjen. (' + (err && err.message || err) + ')';
         });
     };
@@ -214,13 +233,16 @@
   }
   }
 
-  const laster = el('p', { class: 'ingress inn' }, 'Henter invitasjonen …');
+  const laster = el('div', { class: 'laster', role: 'status' }, el('div', { class: 'strek' }), el('p', {}, 'Et øyeblikk …'));
   app.append(laster);
   const kode = params.get('k') || '';
   (kode ? fetch(API + '?k=' + encodeURIComponent(kode)).then(r => r.json()) : Promise.resolve({ ok: false }))
     .then(res => res.ok ? Object.assign(res.data, { valg: params.get('s') || '' }) : null)
     .catch(() => null)
-    .then(data => { laster.remove(); vis(data); });
+    .then(data => {
+      laster.classList.add('borte');
+      setTimeout(() => { laster.remove(); vis(data); }, 300);
+    });
 </script>
 </body>
 </html>

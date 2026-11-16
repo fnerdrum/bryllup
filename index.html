@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
 <title>Juliane &amp; Frithjof – svar</title>
 <link rel="preconnect" href="https://script.google.com">
 <link rel="preconnect" href="https://script.googleusercontent.com">
@@ -104,7 +105,7 @@
 </main>
 <script>
   const API = 'https://script.google.com/macros/s/AKfycbwFCmrK25EuqKGZnTOvWyNbvC3duvGWeHzAwrABDTuvI3DHljfd1SrdjpcKS7LTdRoCGw/exec';
-  const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(location.hash.length > 1 ? location.hash.slice(1) : location.search);
   const app = document.getElementById('app');
 
   function el(tag, attrs, ...barn) {
@@ -123,6 +124,10 @@
   }
 
   function vis(data) {
+  if (data === 'feil') {
+    app.append(stig(el('p', { class: 'ingress' }, 'Vi får ikke kontakt med svarsiden akkurat nå. Prøv igjen om litt, eller svar oss direkte på e-posten.'), 0));
+    return;
+  }
   if (!data) {
     app.append(stig(el('p', { class: 'ingress' }, 'Vi fant dessverre ikke invitasjonen. Sjekk at du brukte lenken fra e-posten, eller ta kontakt med oss.'), 0));
   } else {
@@ -257,9 +262,10 @@
   const start = performance.now();
   const vent = document.getElementById('vent');
   const kode = params.get('k') || '';
-  (kode ? fetch(API + '?k=' + encodeURIComponent(kode)).then(r => r.json()) : Promise.resolve({ ok: false }))
+  const hent = () => fetch(API + '?k=' + encodeURIComponent(kode)).then(r => r.json());
+  (kode ? hent().catch(() => new Promise(r => setTimeout(r, 1500)).then(hent)) : Promise.resolve({ ok: false }))
     .then(res => res.ok ? Object.assign(res.data, { valg: params.get('s') || '' }) : null)
-    .catch(() => null)
+    .catch(() => 'feil')
     .then(data => {
       const synlig = parseFloat(getComputedStyle(vent).opacity) > 0;
       if (synlig) vent.animate([{ opacity: getComputedStyle(vent).opacity }, { opacity: 0 }], { duration: 250, fill: 'forwards' });

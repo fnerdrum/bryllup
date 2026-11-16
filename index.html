@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Juliane &amp; Frithjof – svar</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  :root { --gull: #A69563; --gull-mork: #8F8052; --blekk: #3B3A36; --dempet: #5E5C55; --linje: #D9D2BC; }
+  html, body { margin: 0; background: #fff; color: var(--blekk); }
+  body { font-family: "Cormorant Garamond", Garamond, Georgia, serif; font-size: 19px; line-height: 1.6; }
+  main { max-width: 520px; margin: 0 auto; padding: 56px 22px 64px; text-align: center; }
+
+  @keyframes opp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes navn { from { opacity: 0; filter: blur(5px); } to { opacity: 1; filter: none; } }
+  .inn { animation: opp .9s ease both; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+
+  .navnebilde { display: block; width: 360px; max-width: 100%; height: auto; margin: 0 auto; animation: navn 1.6s ease .2s both; }
+  .strek { height: 1px; background: var(--linje); margin: 28px 0; }
+  .eyebrow { font-variant-numeric: lining-nums; font-size: 12px; font-weight: 500; letter-spacing: .4em; text-indent: .4em; text-transform: uppercase; color: var(--gull); }
+  h1 { font-weight: 400; font-style: italic; font-size: 24px; margin: 0; }
+  .ingress { color: var(--dempet); margin: 8px 0 0; }
+
+  .personer { display: grid; gap: 10px; margin: 26px 0 0; }
+  .person {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 14px 18px; border: 1px solid var(--linje); background: #fff;
+    font: inherit; font-size: 20px; color: var(--blekk); cursor: pointer; text-align: left;
+    transition: border-color .2s, background .2s;
+  }
+  .person .merke {
+    width: 24px; height: 24px; border: 1px solid var(--gull); border-radius: 50%;
+    display: grid; place-items: center; flex: none; transition: background .2s;
+  }
+  .person .merke::after { content: ""; width: 10px; height: 6px; border: solid #fff; border-width: 0 0 2px 2px; transform: rotate(-45deg) translate(1px, -1px); opacity: 0; }
+  .person[aria-pressed="true"] { border-color: var(--gull); background: #FAF8F2; }
+  .person[aria-pressed="true"] .merke { background: var(--gull-mork); border-color: var(--gull-mork); }
+  .person[aria-pressed="true"] .merke::after { opacity: 1; }
+  .status { min-height: 1.6em; margin-top: 14px; font-style: italic; color: var(--dempet); }
+
+  label.kommentar { display: block; margin-top: 26px; font-size: 12px; letter-spacing: .3em; text-transform: uppercase; color: var(--gull); }
+  textarea {
+    display: block; width: 100%; margin-top: 8px; min-height: 90px; padding: 12px 14px;
+    border: 1px solid var(--linje); font: inherit; font-size: 18px; color: var(--blekk); resize: vertical;
+  }
+  textarea:focus, .person:focus-visible, button:focus-visible { outline: 2px solid var(--gull); outline-offset: 2px; }
+
+  .eller { margin: 4px 0; font-size: 15px; font-style: italic; color: #8C877C; }
+  .person.ingen { color: var(--dempet); }
+  .felt { text-align: left; }
+  .felt label.kommentar { text-align: left; }
+  .hjelp { margin-top: 2px; font-size: 16px; font-style: italic; color: #8C877C; }
+  .send {
+    margin-top: 26px; width: 100%; padding: 15px 20px; border: 0; background: var(--gull-mork); color: #fff;
+    font: inherit; font-size: 19px; letter-spacing: .08em; cursor: pointer;
+  }
+  .send[disabled] { opacity: .6; cursor: progress; }
+  .feil { color: #8A3B2E; margin-top: 12px; }
+  .takk h2 { font-weight: 400; font-style: italic; font-size: 26px; margin: 0; }
+  .takk p { color: var(--dempet); }
+  .liten { font-size: 15px; color: #8C877C; margin-top: 30px; }
+</style>
+</head>
+<body>
+<main id="app">
+  <img class="navnebilde" src="navn.png" alt="Juliane &amp; Frithjof">
+</main>
+<script>
+  const API = 'https://script.google.com/macros/s/AKfycbwFCmrK25EuqKGZnTOvWyNbvC3duvGWeHzAwrABDTuvI3DHljfd1SrdjpcKS7LTdRoCGw/exec';
+  const params = new URLSearchParams(location.search);
+  const app = document.getElementById('app');
+
+  function el(tag, attrs, ...barn) {
+    const e = document.createElement(tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => k === 'class' ? e.className = v : e.setAttribute(k, v));
+    barn.forEach(b => e.append(b));
+    return e;
+  }
+
+  function topp() {
+    return [el('div', { class: 'strek' }), el('div', { class: 'eyebrow' }, 'Lørdag 21. august 2027')];
+  }
+
+  function vis(data) {
+  if (!data) {
+    app.append(...topp(), el('p', { class: 'ingress inn' }, 'Vi fant dessverre ikke invitasjonen. Sjekk at du brukte lenken fra e-posten, eller ta kontakt med oss.'));
+  } else {
+    const flere = data.personer.length > 1;
+    const valgt = new Set(
+      data.tidligere ? data.tidligere.kommer
+      : data.valg === 'ja' ? data.personer
+      : []
+    );
+    let ingen = data.tidligere ? data.tidligere.kommer.length === 0 : data.valg === 'nei';
+
+    const status = el('div', { class: 'status' });
+    const oppdaterStatus = () => {
+      status.textContent = ingen
+        ? 'Så synd! Takk for at ' + (flere ? 'dere' : 'du') + ' gir beskjed.'
+        : valgt.size === 0 ? ''
+        : valgt.size === data.personer.length
+          ? (!flere ? 'Så hyggelig!' : data.personer.length === 2 ? 'Dere kommer begge. Så hyggelig!' : 'Dere kommer alle. Så hyggelig!')
+          : [...valgt].join(' og ') + ' kommer.';
+      personKnapper.forEach(([navn, b]) => b.setAttribute('aria-pressed', String(valgt.has(navn))));
+      ingenKnapp.setAttribute('aria-pressed', String(ingen));
+      ekstra.hidden = valgt.size === 0;
+    };
+
+    const personKnapper = data.personer.map(navn => {
+      const b = el('button', { type: 'button', class: 'person' },
+        el('span', {}, flere ? navn : 'Ja, jeg kommer'), el('span', { class: 'merke' }));
+      b.onclick = () => {
+        valgt.has(navn) ? valgt.delete(navn) : valgt.add(navn);
+        ingen = false;
+        oppdaterStatus();
+      };
+      return [navn, b];
+    });
+
+    const ingenKnapp = el('button', { type: 'button', class: 'person ingen' },
+      el('span', {}, flere ? 'Ingen av oss kan komme' : 'Nei, jeg kan dessverre ikke komme'), el('span', { class: 'merke' }));
+    ingenKnapp.onclick = () => {
+      ingen = !ingen;
+      if (ingen) valgt.clear();
+      oppdaterStatus();
+    };
+    const knapper = [...personKnapper.map(([, b]) => b), ...(flere ? [el('div', { class: 'eller' }, 'eller')] : []), ingenKnapp];
+
+    const t = data.tidligere || {};
+    const adresse = el('textarea', { id: 'adresse', maxlength: '300', rows: '3', autocomplete: 'street-address', placeholder: 'Gateadresse\nPostnummer og sted' });
+    adresse.value = t.adresse || '';
+    const allergier = el('textarea', { id: 'allergier', maxlength: '500', rows: '2', placeholder: flere ? 'F.eks. «' + data.personer[data.personer.length - 1] + ': glutenfri»' : 'F.eks. «glutenfri» eller «vegetar»' });
+    allergier.value = t.allergier || '';
+    const kommentar = el('textarea', { id: 'kommentar', maxlength: '1000', rows: '3', placeholder: 'En hilsen eller noe annet vi bør vite' });
+    kommentar.value = t.kommentar || '';
+
+    const felt = (id, tittel, hjelp, input) => el('div', { class: 'felt' },
+      el('label', { class: 'kommentar', for: id }, tittel),
+      hjelp ? el('div', { class: 'hjelp' }, hjelp) : '',
+      input);
+
+    const ekstra = el('div', {},
+      felt('adresse', 'Postadresse', 'Så vi vet hvor vi skal sende invitasjonen.', adresse),
+      felt('allergier', 'Allergier eller kostholdshensyn', flere ? 'Skriv gjerne hvem det gjelder. La feltet stå tomt om det ikke gjelder noen.' : 'La feltet stå tomt om det ikke gjelder deg.', allergier));
+
+    const send = el('button', { type: 'button', class: 'send' }, data.tidligere ? 'Oppdater svar' : 'Send svar');
+    const feil = el('div', { class: 'feil', role: 'alert' });
+
+    send.onclick = () => {
+      feil.textContent = '';
+      if (!valgt.size && !ingen) {
+        feil.textContent = flere ? 'Kryss av for hvem som kommer, eller velg «Ingen av oss kan komme».' : 'Velg om du kommer eller ikke.';
+        return;
+      }
+      if (valgt.size && !adresse.value.trim()) {
+        feil.textContent = 'Fyll gjerne inn postadressen, så vi vet hvor invitasjonen skal sendes.';
+        adresse.focus();
+        return;
+      }
+      send.disabled = true;
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          k: data.kode,
+          svar: {
+            kommer: [...valgt],
+            adresse: valgt.size ? adresse.value : '',
+            allergier: valgt.size ? allergier.value : '',
+            kommentar: kommentar.value,
+          },
+        }),
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (!res.ok) throw new Error(res.feil || 'ukjent feil');
+          visTakk(res);
+        })
+        .catch(err => {
+          send.disabled = false;
+          feil.textContent = 'Noe gikk galt, prøv igjen. (' + (err && err.message || err) + ')';
+        });
+    };
+
+    const skjema = el('div', { class: 'inn', style: 'animation-delay:.6s' },
+      el('h1', {}, 'Kjære ' + data.hilsen + ','),
+      el('p', { class: 'ingress' }, data.tidligere
+        ? 'Vi har fått svaret ' + (flere ? 'deres' : 'ditt') + '. Du kan endre det her.'
+        : (flere ? 'Kryss av for hvem av dere som kommer.' : 'Gi oss beskjed om du kommer.') + (data.frist ? ' Svar gjerne innen ' + data.frist + '.' : '')),
+      el('div', { class: 'personer' }, ...knapper),
+      status,
+      ekstra,
+      felt('kommentar', 'Kommentar (valgfritt)', '', kommentar),
+      send,
+      feil
+    );
+    oppdaterStatus();
+    app.append(...topp(), skjema);
+
+    function visTakk(res) {
+      skjema.remove();
+      const kommer = res.antall > 0;
+      app.append(el('div', { class: 'takk inn' },
+        el('h2', {}, kommer ? 'Tusen takk, vi gleder oss!' : 'Takk for at du ga beskjed'),
+        el('p', {}, kommer
+          ? 'Selve invitasjonen kommer i posten, med program og praktisk informasjon.'
+          : 'Vi kommer til å savne ' + (flere ? 'dere' : 'deg') + '.'),
+        el('p', { class: 'liten' }, 'Du kan endre svaret når som helst med lenken i e-posten.')
+      ));
+    }
+  }
+  }
+
+  const laster = el('p', { class: 'ingress inn' }, 'Henter invitasjonen …');
+  app.append(laster);
+  const kode = params.get('k') || '';
+  (kode ? fetch(API + '?k=' + encodeURIComponent(kode)).then(r => r.json()) : Promise.resolve({ ok: false }))
+    .then(res => res.ok ? Object.assign(res.data, { valg: params.get('s') || '' }) : null)
+    .catch(() => null)
+    .then(data => { laster.remove(); vis(data); });
+</script>
+</body>
+</html>
